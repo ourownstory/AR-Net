@@ -46,7 +46,7 @@ def load_config(verbose=False, random=True):
         "epochs": 40,
         "batch": 128,
         "est_sparsity": 1,  # 0 = fully sparse, 1 = not sparse
-        "lambda_delay": 10,  # delays start of regularization
+        "lambda_delay": 10,  # delays start of regularization by lambda_delay epochs
     }
     # For auto-regularization based on sparsity estimation:
     if data_config["pad_to"] is not None and data_config["pad_to"] > data_config["ar_val"]:
@@ -64,17 +64,19 @@ def load_config(verbose=False, random=True):
     return data_config, model_config, train_config
 
 
-def main(verbose=False, plot=False, save=False, random=True):
-    data_config, model_config, train_config = load_config(verbose, random)
-
+def main(verbose=False, plot=False, save=False, random_ar_param=True):
+    # load configuration dicts. Could be implemented to load from JSON instead.
+    data_config, model_config, train_config = load_config(verbose, random_ar_param)
+    # loads randomly generated data. Could be implemented to load a specific dataset instead.
     data = load_data(data_config, verbose, plot)
-
+    # runs training and testing.
     results_dar, stats_dar = run_training(data, model_config, train_config, verbose)
 
+    # optional printing
     if verbose:
         print(stats_dar)
 
-    # plot
+    # optional plotting
     if plot:
         utils.plot_loss_curve(
             losses=results_dar["losses"],
@@ -98,4 +100,4 @@ def main(verbose=False, plot=False, save=False, random=True):
 
 
 if __name__ == "__main__":
-    main(verbose=True, plot=True, save=True, random=False)
+    main(verbose=True, plot=True, save=True, random_ar_param=False)

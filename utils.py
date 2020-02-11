@@ -2,7 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import json
 import os
 
 
@@ -18,11 +17,6 @@ def compute_stats_ar(results, ar_params, verbose=False):
 
     sTPE = 100 * np.sum(abs_error) / (10e-9 + np.sum(symmetric_abs_coeff))
     stats["sTPE (AR-coefficients)"] = sTPE
-
-    # abs_error_sum = sum(abs_error)
-    # stats["TP (AR-coefficients)"] = min(1.0, abs_error_sum / (sum(np.abs(data["ar"])) + 10e-9))
-    # mean_rel_error = np.mean(np.minimum(1.0, abs_error / (np.abs(data["ar"]) + 10e-9)))
-    # stats["mean_rel_error"] = mean_rel_error
 
     # predictions error
     stats["MSE"] = np.mean(error ** 2)
@@ -153,9 +147,6 @@ def list_of_dicts_2_dict_of_means_minmax(sources):
     for key in keys:
         values = [d[key] for d in sources]
         res[key] = (np.mean(values), min(values), max(values))
-        # res["mean"][key] = np.mean(values)
-        # res["min"][key] = min(values)
-        # res["max"][key] = max(values)
     return res
 
 
