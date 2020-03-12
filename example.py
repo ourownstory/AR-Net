@@ -43,7 +43,7 @@ def load_config(verbose=False, random=True):
     train_config = {
         "lr": 2e-4,
         "lr_decay": 0.9,
-        "epochs": 40,
+        "epochs": 10,
         "batch": 128,
         "est_sparsity": 1,  # 0 = fully sparse, 1 = not sparse
         "lambda_delay": 10,  # delays start of regularization by lambda_delay epochs

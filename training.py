@@ -119,6 +119,7 @@ def test(model, loader, loss_fn):
 
     return y_predict_vector, losses, mse
 
+
 def run_train_test(dataset_train, dataset_test, model_config, train_config, verbose=False):
     data_loader_train = DataLoader(dataset=dataset_train, batch_size=train_config["batch"], shuffle=True)
     data_loader_test = DataLoader(dataset=dataset_test, batch_size=len(dataset_test), shuffle=False)
