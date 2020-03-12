@@ -1,8 +1,8 @@
 import numpy as np
-
-import utils
 from data_loader import load_data
 from training import run as run_training
+
+from v0_1_pure_pytorch import utils
 
 
 def load_config(verbose=False, random=True):

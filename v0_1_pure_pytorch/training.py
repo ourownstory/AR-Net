@@ -1,13 +1,13 @@
 import time
-import numpy as np
 
+import numpy as np
 import torch
 import torch.nn as nn
+from model import DAR
 from torch import optim
 from torch.utils.data import DataLoader
 
-import utils
-from model import DAR
+from v0_1_pure_pytorch import utils
 
 
 # Architecture, batching etc of DARMA
