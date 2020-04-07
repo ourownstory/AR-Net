@@ -3,6 +3,7 @@ A simple Auto-Regressive Neural Network for time-series ([link to paper](https:/
 
 The new version 1.0 makes the model easier to use with your own dataset and requires less hyperparameters for a simpler training procedure. It is built on the latest release of Fastai2. View the notebook [`v1_0/example_ar_net.ipynb`](v1_0/example_ar_net.ipynb) for an example of how to use the model.
 
-Make sure you install the latest fastai2 version direclty from [their github](https://github.com/fastai/fastai2#installing). (I had to extend their code, but my pull request got promply merged.)
-
-Version 0.1 was based on Pytorch and you can still use it if you do not like fastai. See file [`v0_1/example.py`](v0_1/example.py) for how to use the v0.1 model.
+## Notes
+- My pull request in fastai2 was merged and has made it's way to the current pypi package (``fastai2==0.0.16``), so you can now  install fastai2 directly with pip. 
+- Other dependencies include ``numpy, pandas, matplotlib, seaborn, pytorch``.
+- Version 0.1 was based on Pytorch and you can still use it if you do not like fastai. Seejust file [`v0_1/example.py`](v0_1/example.py) for how to use the v0.1 model.
