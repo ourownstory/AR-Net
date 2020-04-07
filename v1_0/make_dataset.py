@@ -26,7 +26,6 @@ def tabularize_univariate(series, n_lags, n_forecasts=1, nested_list=False):
         df = pd.concat([x.apply(list, axis=1), y.apply(list, axis=1)], axis=1)
         df.columns = ["x", "y"]
     else:
-        print(len(x.columns))
         df = pd.concat([x, y], axis=1)
         df.columns = ["x_{}".format(num) for num in list(range(len(x.columns)))] + \
                      ["y_{}".format(num) for num in list(range(len(y.columns)))]
