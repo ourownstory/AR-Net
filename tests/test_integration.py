@@ -36,9 +36,6 @@ class IntegrationTests(unittest.TestCase):
     plot = False
     save = True
 
-    def test_fakie(self):
-        pass
-
     def test_everything_created_ar_data(self):
         self.save = True
         if self.save:
