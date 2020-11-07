@@ -1,6 +1,6 @@
 import pandas as pd
 
-from create_ar_data import load_from_file
+from arnet.create_ar_data import load_from_file
 
 
 def tabularize_univariate(series, n_lags, n_forecasts=1, nested_list=False):
