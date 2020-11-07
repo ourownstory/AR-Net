@@ -1,4 +1,5 @@
 import os
+import torch
 ## lazy imports ala fastai2 style (for nice print functionality)
 from fastai.basics import *
 from fastai.tabular.all import *
