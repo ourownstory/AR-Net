@@ -5,6 +5,9 @@ import os
 import pathlib
 import shutil
 import logging
+import warnings
+
+warnings.filterwarnings("ignore", message=".*nonzero.*", category=UserWarning)
 
 ## lazy imports ala fastai2 style (needed for nice print functionality)
 from fastai.basics import *
@@ -23,11 +26,15 @@ results_path = os.path.join(data_path, "results_test")
 
 EPOCHS = 3
 
+# import tkinter
+# import matplotlib
+# matplotlib.use('TkAgg')
+
 
 class IntegrationTests(unittest.TestCase):
     verbose = False
     plot = False
-    save = False
+    save = True
 
     def test_fakie(self):
         pass
@@ -38,7 +45,7 @@ class IntegrationTests(unittest.TestCase):
             if not os.path.exists(results_path):
                 os.makedirs(results_path)
         # Hyperparameters
-        n_epoch = 2
+        n_epoch = 3
         valid_p = 0.2
         n_forecasts = 1  # Note: if more than one, must have a list of ar_param for each forecast target.
         sparsity = 0.3  # guesstimate
@@ -76,13 +83,14 @@ class IntegrationTests(unittest.TestCase):
         # should be [0.20, 0.30, -0.50, ...]
 
         preds, y = learn.get_preds()
-        if self.plot:
-            learn.recorder.plot_loss()
+        if self.plot or self.save:
+            if self.plot:
+                learn.recorder.plot_loss()
             arnet.plot_weights(
-                ar_val=len(ar_params[0]), weights=coeff[0], ar=ar_params[0], save=self.save, savedir=results_path
+                ar_val=len(ar_params[0]), weights=coeff[0], ar=ar_params[0], save=not self.plot, savedir=results_path
             )
-            arnet.plot_prediction_sample(preds, y, num_obs=100, save=self.save, savedir=results_path)
-            arnet.plot_error_scatter(preds, y, save=self.save, savedir=results_path)
+            arnet.plot_prediction_sample(preds, y, num_obs=100, save=not self.plot, savedir=results_path)
+            arnet.plot_error_scatter(preds, y, save=not self.plot, savedir=results_path)
 
         if self.save:
             # Optional:save and create inference learner
@@ -90,21 +98,22 @@ class IntegrationTests(unittest.TestCase):
             model_name = "ar{}_sparse_{:.3f}_ahead_{}_epoch_{}.pkl".format(ar_order, sparsity, n_forecasts, n_epoch)
             learn.export(fname=os.path.join(results_path, model_name))
             # can be loaded like this
-            learn = load_learner(fname=os.path.join(results_path, model_name), cpu=True)
+            infer = load_learner(fname=os.path.join(results_path, model_name), cpu=True)
         # can unfreeze the model and fine_tune
         learn.unfreeze()
-        learn.fit_one_cycle(1, lr_at_min / 100)
-
-        if self.plot:
-            learn.recorder.plot_loss()
+        learn.fit_one_cycle(2, lr_at_min / 100)
 
         coeff2 = arnet.coeff_from_model(learn.model)
         log.info("ar params", arnet.nice_print_list(ar_params))
         log.info("model weights", arnet.nice_print_list(coeff))
         log.info("model weights2", arnet.nice_print_list(coeff2))
-        arnet.plot_weights(
-            ar_val=len(ar_params[0]), weights=coeff2[0], ar=ar_params[0], save=self.save, savedir=results_path
-        )
+
+        if self.plot or self.save:
+            if self.plot:
+                learn.recorder.plot_loss()
+            arnet.plot_weights(
+                ar_val=len(ar_params[0]), weights=coeff2[0], ar=ar_params[0], save=not self.plot, savedir=results_path
+            )
 
         if self.save:
             shutil.rmtree(results_path)

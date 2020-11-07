@@ -16,12 +16,13 @@ def plot_weights(ar_val, weights, ar, model_name="AR-Net", save=False, savedir="
     plt.figure(figsize=(10, 6))
     palette = {"Classic-AR": "C0", "AR-Net": "C1", "AR-Process (True)": "k"}
     sns.barplot(data=df, palette=palette, x="AR-coefficient (lag number)", hue="model", y="value (weight)")
-    # plt.show()
     if save:
         if not os.path.exists(savedir):
             os.makedirs(savedir)
         figname = "weights_{}_{}.png".format(ar_val, model_name)
         plt.savefig(os.path.join(savedir, figname), dpi=600, bbox_inches="tight")
+    else:
+        plt.show()
 
 
 def plot_prediction_sample(predicted, actual, num_obs=100, model_name="AR-Net", save=False, savedir="results"):
@@ -35,7 +36,8 @@ def plot_prediction_sample(predicted, actual, num_obs=100, model_name="AR-Net", 
             os.makedirs(savedir)
         figname = "prediction_{}.png".format(model_name)
         plt.savefig(os.path.join(savedir, figname), dpi=600, bbox_inches="tight")
-    plt.show()
+    else:
+        plt.show()
 
 
 def plot_error_scatter(predicted, actual, model_name="AR-Net", save=False, savedir="results"):
@@ -49,4 +51,5 @@ def plot_error_scatter(predicted, actual, model_name="AR-Net", save=False, saved
             os.makedirs(savedir)
         figname = "scatter_{}.png".format(model_name)
         plt.savefig(os.path.join(savedir, figname), dpi=600, bbox_inches="tight")
-    plt.show()
+    else:
+        plt.show()
