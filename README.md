@@ -9,13 +9,13 @@ and install arnet as python package with `pip install .`
 View the notebook [`arnet/example_ar_net.ipynb`](arnet/example_ar_net.ipynb) for an example of how to use the model.
 
 ## Versions
-### Now part of NeuralProphet
+### Now also part of NeuralProphet
 AR-Net is now part of a more comprehensive package [NeuralProphet](https://github.com/ourownstory/neural_prophet). 
 I strongly recommend using it instead of the standalone version, unless you specifically want to use AR-Net, 
 which may make sense if you need to model a highly-autoregressive time-series with sparse long-range dependencies.
 
 ### Current (1.1)
-The version 1.0 made the model easier to use with your own dataset and requires less hyperparameters 
+The version 1.0 made the model easier to use with your own datasets and requires less hyperparameters 
 for a simpler training procedure. It is built on the fastai library.
 
 Changes (1.0 -> 1.1):
