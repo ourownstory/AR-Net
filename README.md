@@ -6,7 +6,7 @@ After downloading the code repository (via `git clone`), change to the repositor
 and install arnet as python package with `pip install .`
 
 ## Use
-View the notebook [`arnet/example_ar_net.ipynb`](arnet/example_ar_net.ipynb) for an example of how to use the model.
+View the notebook [`example_notebooks/arnet.ipynb`](example_notebooks/arnet.ipynb) for an example of how to use the model.
 
 ## Versions
 ### Now also part of NeuralProphet
