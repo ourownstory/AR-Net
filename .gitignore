@@ -1,0 +1,14 @@
+__py*
+*.egg*
+*.idea*
+*.log
+**/*.pyc
+**/__pycache__/
+**/*.gz
+**/*.whl
+**/*egg-info/
+site/
+*.ipynb_checkpoints*
+ar_data/
+results/
+*/models/*
