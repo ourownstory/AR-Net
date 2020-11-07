@@ -1,2 +1,2 @@
 fastai2==0.0.16
-statsmodels
+statsmodels>=0.12.1
