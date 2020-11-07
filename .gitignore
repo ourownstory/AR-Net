@@ -10,3 +10,4 @@ __py*
 site/
 *.ipynb_checkpoints*
 ar_data/
+results/
