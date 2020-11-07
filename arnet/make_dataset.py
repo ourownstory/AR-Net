@@ -18,24 +18,23 @@ def tabularize_univariate(series, n_lags, n_forecasts=1, nested_list=False):
     """
     n_samples = len(series) - n_lags + 1 - n_forecasts
 
-    x = pd.DataFrame([series.iloc[i: i + n_lags, 0].values
-                      for i in range(n_samples)])
-    y = pd.DataFrame([series.iloc[i + n_lags: i + n_lags + n_forecasts, 0].values
-                      for i in range(n_samples)])
+    x = pd.DataFrame([series.iloc[i : i + n_lags, 0].values for i in range(n_samples)])
+    y = pd.DataFrame([series.iloc[i + n_lags : i + n_lags + n_forecasts, 0].values for i in range(n_samples)])
     if nested_list:
         df = pd.concat([x.apply(list, axis=1), y.apply(list, axis=1)], axis=1)
         df.columns = ["x", "y"]
     else:
         df = pd.concat([x, y], axis=1)
-        df.columns = ["x_{}".format(num) for num in list(range(len(x.columns)))] + \
-                     ["y_{}".format(num) for num in list(range(len(y.columns)))]
+        df.columns = ["x_{}".format(num) for num in list(range(len(x.columns)))] + [
+            "y_{}".format(num) for num in list(range(len(y.columns)))
+        ]
     return df
 
 
 def main():
     verbose = True
-    data_path = 'ar_data'
-    data_name = 'ar_3_ma_0_noise_0.100_len_10000'
+    data_path = "ar_data"
+    data_name = "ar_3_ma_0_noise_0.100_len_10000"
 
     ## if created AR data with create_ar_data, we can use the helper function:
     df, data_config = load_from_file(data_path, data_name, load_config=True)
@@ -66,7 +65,5 @@ def main():
         print(df_tab.head())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
-

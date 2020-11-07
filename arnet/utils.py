@@ -3,7 +3,7 @@ import torch
 
 
 def pad_ar_params(ar_params, n_lags, n_forecasts=1):
-    """"
+    """ "
     pads ar_parameter lists to the length of n_lags
         ar_params: list of length n_forecasts with elements: lists of ar coeffs
         n_lags: length to which pad each of the ar coeffs
@@ -12,8 +12,9 @@ def pad_ar_params(ar_params, n_lags, n_forecasts=1):
     if n_forecasts != 1:
         if all([isinstance(ar_params[i], list) for i in range(n_forecasts)]):
             return [pad_ar_params([ar_params[i]], n_lags, 1)[0] for i in range(n_forecasts)]
-        else: raise NotImplementedError("AR Coeff for each of the forecast targets are needed")
-    return [ar_params[0] + [0.0]*(n_lags - len(ar_params[0]))]
+        else:
+            raise NotImplementedError("AR Coeff for each of the forecast targets are needed")
+    return [ar_params[0] + [0.0] * (n_lags - len(ar_params[0]))]
 
 
 def estimate_noise(series):
@@ -46,6 +47,5 @@ def compute_sTPE(est, real):
 def coeff_from_model(model, reversed_weights=True):
     for layer in model.modules():
         if isinstance(layer, torch.nn.Linear):
-            weights = [list(x[::-1] if reversed_weights else x)
-                       for x in layer.weight.detach().numpy()]
-            return weights # note: preliminary exit of loop is a feature.
+            weights = [list(x[::-1] if reversed_weights else x) for x in layer.weight.detach().numpy()]
+            return weights  # note: preliminary exit of loop is a feature.

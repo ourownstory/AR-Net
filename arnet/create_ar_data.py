@@ -13,7 +13,7 @@ def _get_config(noise_std=0.1, n_samples=10000, random_ar_params=True):
         "ma_order": 0,
         "params": None,  # for randomly generated AR params
     }
-    data_config_random["samples"] = n_samples #+ int(data_config_random["ar_order"])
+    data_config_random["samples"] = n_samples  # + int(data_config_random["ar_order"])
     # option 2: Manually define AR parameters
     data_config_manual = {
         "noise_std": noise_std,
@@ -22,7 +22,7 @@ def _get_config(noise_std=0.1, n_samples=10000, random_ar_params=True):
     }
     data_config_manual["ar_order"] = int(sum(np.array(data_config_manual["params"][0]) != 0.0))
     data_config_manual["ma_order"] = int(sum(np.array(data_config_manual["params"][1]) != 0.0))
-    data_config_manual["samples"] = n_samples #+ int(data_config_manual["ar_order"])
+    data_config_manual["samples"] = n_samples  # + int(data_config_manual["ar_order"])
     return data_config_random if random_ar_params else data_config_manual
 
 
@@ -49,10 +49,10 @@ def _generate_random_arparams(ar_order, ma_order, limit_abs_sum=True, maxiter=10
             ma_abssum = sum(np.abs(maparams))
             if ar_abssum > 1:
                 arparams = arparams / (ar_abssum + 10e-6)
-                arparams = arparams * (0.5 + 0.5*np.random.random())
+                arparams = arparams * (0.5 + 0.5 * np.random.random())
             if ma_abssum > 1:
                 maparams = maparams / (ma_abssum + 10e-6)
-                maparams = maparams * (0.5 + 0.5*np.random.random())
+                maparams = maparams * (0.5 + 0.5 * np.random.random())
 
         arparams = arparams - np.mean(arparams)
         maparams = maparams - np.mean(maparams)
@@ -80,17 +80,18 @@ def save_to_file(save_path, series, data_config):
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     file_data = "ar_{}_ma_{}_noise_{:.3f}_len_{}".format(
-        data_config["ar_order"], data_config["ma_order"], data_config["noise_std"], data_config["samples"])
-    np.savetxt(os.path.join(save_path, file_data + '.csv'), series, delimiter=',')
-    with open(os.path.join(save_path, "info_" + file_data + '.json'), 'w') as f:
+        data_config["ar_order"], data_config["ma_order"], data_config["noise_std"], data_config["samples"]
+    )
+    np.savetxt(os.path.join(save_path, file_data + ".csv"), series, delimiter=",")
+    with open(os.path.join(save_path, "info_" + file_data + ".json"), "w") as f:
         json.dump(data_config, f)
     return file_data
 
 
 def load_from_file(data_path, data_name, load_config=True, verbose=False):
-    df = pd.read_csv(os.path.join(data_path, data_name + '.csv'), header=None, index_col=False)
+    df = pd.read_csv(os.path.join(data_path, data_name + ".csv"), header=None, index_col=False)
     if load_config:
-        with open(os.path.join(data_path, "info_" + data_name + '.json'), 'r') as f:
+        with open(os.path.join(data_path, "info_" + data_name + ".json"), "r") as f:
             data_config = json.load(f)
     else:
         data_config = None
@@ -106,7 +107,7 @@ def main():
     verbose = True
     random = False
     save = True
-    save_path = 'ar_data'
+    save_path = "ar_data"
 
     data_config = _get_config(random_ar_params=random)
     if verbose:
@@ -126,9 +127,5 @@ def main():
             print(df.head())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
-
-
-
