@@ -14,7 +14,8 @@ from fastai.tabular.all import *
 # from fastai.tabular.learner import tabular_learner
 # from fastai.torch_core import to_detach
 # from fastai.data.transforms import Normalize
-## import my own code
+
+## import arnet
 from arnet.make_dataset import load_from_file, tabularize_univariate
 from arnet.utils import pad_ar_params, estimate_noise, split_by_p_valid, nice_print_list, compute_sTPE, coeff_from_model
 from arnet.plotting import plot_weights, plot_prediction_sample, plot_error_scatter
@@ -23,7 +24,8 @@ from arnet.plotting import plot_weights, plot_prediction_sample, plot_error_scat
 class SparsifyAR(Callback):
     """Callback that adds regularization of first linear layer according to AR-Net paper"""
 
-    def __init__(self, est_sparsity, est_noise=1.0, reg_strength=0.02):
+    def __init__(self, est_sparsity, est_noise=1.0, reg_strength=0.02, **kwargs):
+        super().__init__(**kwargs)
         self.lam = 0.0
         if est_sparsity is not None:
             self.lam = reg_strength * est_noise * (1.0 / est_sparsity - 1.0)
@@ -122,14 +124,13 @@ def init_ar_learner(series, ar_order, n_forecasts=1, valid_p=0.1, sparsity=None,
     if ar_params is not None:
         metrics.append(sTPE(ar_params, at_epoch_end=False))
 
+    tm_config = {"use_bn": False, "bn_final": False, "bn_cont": False}
     learn = tabular_learner(
         dls,
         layers=[],  # Note: None defaults to [200, 100]
-        # config = None, # None calls tabular_config()
+        config=tm_config,  # None calls tabular_config()
         n_out=len(target_names),  # None calls get_c(dls)
-        use_bn=False,  # passed to TabularModel
-        bn_final=False,  # passed to TabularModel
-        bn_cont=False,  # passed to TabularModel
+        train_bn=False,  # passed to Learner
         metrics=metrics,  # passed on to TabularLearner, to parent Learner
         loss_func=mse,
         cbs=callbacks,
@@ -151,7 +152,7 @@ def main(verbose=False):
     ## Load data
     if created_ar_data:
         ## if created AR data with create_ar_data, we can use the helper function:
-        df, data_config = load_from_file(data_path, data_name, load_config=True, verbose=verbose)
+        df, data_config = arnet.load_from_file(data_path, data_name, load_config=True, verbose=verbose)
     else:
         ## else we can manually load any file that stores a time series, for example:
         df = pd.read_csv(os.path.join(data_path, data_name + ".csv"), header=None, index_col=False)
