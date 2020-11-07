@@ -15,9 +15,9 @@ from fastai.tabular.all import *
 # from fastai.torch_core import to_detach
 # from fastai.data.transforms import Normalize
 ## import my own code
-from make_dataset import load_from_file, tabularize_univariate
-from utils import pad_ar_params, estimate_noise, split_by_p_valid, nice_print_list, compute_sTPE, coeff_from_model
-from plotting import plot_weights, plot_prediction_sample, plot_error_scatter
+from arnet.make_dataset import load_from_file, tabularize_univariate
+from arnet.utils import pad_ar_params, estimate_noise, split_by_p_valid, nice_print_list, compute_sTPE, coeff_from_model
+from arnet.plotting import plot_weights, plot_prediction_sample, plot_error_scatter
 
 
 class SparsifyAR(Callback):
