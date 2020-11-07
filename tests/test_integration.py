@@ -26,10 +26,6 @@ results_path = os.path.join(data_path, "results_test")
 
 EPOCHS = 3
 
-# import tkinter
-# import matplotlib
-# matplotlib.use('TkAgg')
-
 
 class IntegrationTests(unittest.TestCase):
     verbose = False

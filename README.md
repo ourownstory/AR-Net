@@ -15,20 +15,16 @@ I strongly recommend using it instead of the standalone version, unless you spec
 which may make sense if you need to model a highly-autoregressive time-series with sparse long-range dependencies.
 
 ### Current (1.1)
-Updates:
+The version 1.0 made the model easier to use with your own dataset and requires less hyperparameters 
+for a simpler training procedure. It is built on the fastai library.
+
+Changes (1.0 -> 1.1):
 * port [beta fastai2](https://github.com/fastai/fastai2) to it's current [stable release](https://github.com/fastai/fastai) 
-* install as pip package possible
+* make install as pip package possible
 * add black code formatter (and git pre-commit hook)
 * add unittests (and git pre-push hook)
 * fix issues with new fastai api
-
-
-### 1.0
-The version 1.0 made the model easier to use with your own dataset and requires less hyperparameters 
-for a simpler training procedure. It is built on a beta release of Fastai2 (``fastai2==0.0.16``). 
-Note: other versions of fastai might break. Other dependencies include ``numpy, pandas, matplotlib, seaborn, pytorch``
-
-View the notebook [`v1_0/example_ar_net.ipynb`](v1_0/example_ar_net.ipynb) for an example of how to use the model.
+* remove old code fragments
 
 ### Pure PyTorch (0.1)
 Version 0.1 was based on Pytorch and you can still use it if you do not want to use fastai. 
