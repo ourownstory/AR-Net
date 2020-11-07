@@ -1,5 +1,5 @@
 # AR-Net
-A simple Auto-Regressive Neural Network for time-series ([link to paper](https://arxiv.org/abs/1911.12436)).
+A simple auto-regressive Neural Network for time-series ([link to paper](https://arxiv.org/abs/1911.12436)).
 
 ## Versions
 ### 0.1
