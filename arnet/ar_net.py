@@ -1,16 +1,16 @@
 import os
 ## lazy imports ala fastai2 style (for nice print functionality)
-from fastai2.basics import *
-from fastai2.tabular.all import *
+from fastai.basics import *
+from fastai.tabular.all import *
 ## explicit imports (for reference)
-# from fastai2.basics import Callback
-# from fastai2.data.core import DataLoaders
-# from fastai2.learner import Metric
-# from fastai2.metrics import mse, mae
-# from fastai2.tabular.core import TabularPandas, TabDataLoader
-# from fastai2.tabular.learner import tabular_learner
-# from fastai2.torch_core import to_detach
-# from fastai2.data.transforms import Normalize
+# from fastai.basics import Callback
+# from fastai.data.core import DataLoaders
+# from fastai.learner import Metric
+# from fastai.metrics import mse, mae
+# from fastai.tabular.core import TabularPandas, TabDataLoader
+# from fastai.tabular.learner import tabular_learner
+# from fastai.torch_core import to_detach
+# from fastai.data.transforms import Normalize
 ## import my own code
 from make_dataset import load_from_file, tabularize_univariate
 from utils import pad_ar_params, estimate_noise, split_by_p_valid, nice_print_list, compute_sTPE, coeff_from_model
