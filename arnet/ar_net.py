@@ -78,7 +78,19 @@ class sTPE(Metric):
         return "sTPE of AR coeff"
 
 
-def init_ar_learner(series, ar_order, n_forecasts=1, valid_p=0.1, sparsity=None, ar_params=None, verbose=False):
+def init_ar_learner(
+    series,
+    ar_order,
+    n_forecasts=1,
+    valid_p=0.1,
+    sparsity=None,
+    ar_params=None,
+    train_bs=32,
+    valid_bs=128,
+    verbose=False,
+):
+    if sparsity is not None and spparsity == 1.0:
+        sparsity = None
     df_all = tabularize_univariate(series, ar_order, n_forecasts)
     est_noise = estimate_noise(series)
 
@@ -97,7 +109,7 @@ def init_ar_learner(series, ar_order, n_forecasts=1, valid_p=0.1, sparsity=None,
     target_names = [col for col in list(df_all.columns) if "y_" == col[:2]]
 
     ## preprocess?
-    # procs = [Normalize] # Note: not AR if normalized, need to unnormalize then again.
+    # procs = [Normalize]
     procs = []
 
     tp = TabularPandas(df_all, procs=procs, cat_names=None, cont_names=cont_names, y_names=target_names, splits=splits)
@@ -106,8 +118,8 @@ def init_ar_learner(series, ar_order, n_forecasts=1, valid_p=0.1, sparsity=None,
         # print(tp.iloc[0:5])
 
     ### next: data loader, learner
-    trn_dl = TabDataLoader(tp.train, bs=32, shuffle=True, drop_last=True)
-    val_dl = TabDataLoader(tp.valid, bs=128)
+    trn_dl = TabDataLoader(tp.train, bs=train_bs, shuffle=True, drop_last=True)
+    val_dl = TabDataLoader(tp.valid, bs=valid_bs)
     dls = DataLoaders(trn_dl, val_dl)
 
     # if verbose:
