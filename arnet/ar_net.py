@@ -89,7 +89,7 @@ def init_ar_learner(
     valid_bs=128,
     verbose=False,
 ):
-    if sparsity is not None and spparsity == 1.0:
+    if sparsity is not None and sparsity == 1.0:
         sparsity = None
     df_all = tabularize_univariate(series, ar_order, n_forecasts)
     est_noise = estimate_noise(series)
