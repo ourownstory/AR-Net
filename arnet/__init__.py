@@ -1,6 +1,6 @@
 import logging
 
-log = logging.getLogger("AR-Net")
+log = logging.getLogger("ARNet")
 log.setLevel("INFO")
 # Create handlers
 c_handler = logging.StreamHandler()

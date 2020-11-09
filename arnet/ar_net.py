@@ -1,7 +1,7 @@
-import os
-import torch
 from dataclasses import dataclass, field
-import torch.nn.functional as F
+import logging
+
+import fastai
 
 ## lazy imports ala fastai2 style (for nice print functionality)
 from fastai.basics import *
@@ -12,22 +12,19 @@ from fastai.tabular.all import *
 # from fastai.data.core import DataLoaders
 # from fastai.learner import Metric
 # from fastai.metrics import mse, mae, huber
-import fastai
-
 # from fastai.tabular.core import TabularPandas, TabDataLoader
 # from fastai.tabular.learner import tabular_learner
 # from fastai.torch_core import to_detach
 # from fastai.data.transforms import Normalize
 
-import logging
 
 ## import arnet
 from arnet.make_dataset import load_from_file, tabularize_univariate
 from arnet.utils import pad_ar_params, estimate_noise, split_by_p_valid, nice_print_list, compute_sTPE, coeff_from_model
-from arnet.plotting import plot_weights, plot_prediction_sample, plot_error_scatter
 from arnet import utils, plotting
 
-log = logging.getLogger("AR-Net")
+
+log = logging.getLogger("ARNet")
 
 
 class SparsifyAR(Callback):
@@ -202,14 +199,14 @@ class ARNet:
     def tabularize(self, series):
         if self.est_noise is None:
             self.est_noise = estimate_noise(series)
-            log.info("estimated noise of series", self.est_noise)
+            log.info("estimated noise of series: {}".format(self.est_noise))
 
         df_all = tabularize_univariate(series, self.ar_order, self.n_forecasts)
 
         log.debug("tabularized df")
-        log.debug("df columns", list(df_all.columns))
-        log.debug("df shape", df_all.shape)
-        # log.debug("df head(3)", df_all.head(3))
+        log.debug("df columns: {}".format(list(df_all.columns)))
+        log.debug("df shape: {}".format(df_all.shape))
+        # log.debug("df head(3): {}".format(df_all.head(3)))
         return df_all
 
     def make_datasets(
@@ -233,7 +230,7 @@ class ARNet:
         tp = TabularPandas(
             df_all, procs=procs, cat_names=None, cont_names=cont_names, y_names=target_names, splits=splits
         )
-        log.info("cont var num", len(tp.cont_names), tp.cont_names)
+        log.info("cont var num: {}, names: {}".format(len(tp.cont_names), tp.cont_names))
         # log.debug(tp.iloc[0:5])
 
         # next: data loader, learner
@@ -241,7 +238,7 @@ class ARNet:
         val_dl = TabDataLoader(tp.valid, bs=valid_bs)
         self.dls = DataLoaders(trn_dl, val_dl)
         log.debug("showing batch")
-        log.debug(self.dls.show_batch(show=False))
+        log.debug("{}".format(self.dls.show_batch(show=False)))
         return self
 
     def create_learner(
@@ -256,7 +253,7 @@ class ARNet:
         callbacks = []
         if sparsity is not None:
             callbacks.append(SparsifyAR(sparsity, self.est_noise))
-            log.info("reg lam: ", callbacks[0].lam)
+            log.info("reg lam: {}".format(callbacks[0].lam))
 
         metrics = [fastai.metrics.mse, fastai.metrics.mae]
         if ar_params is not None:
@@ -273,7 +270,7 @@ class ARNet:
             loss_func=self.loss_func,
             cbs=callbacks,
         )
-        log.debug(self.learn.model)
+        log.debug("{}".format(self.learn.model))
         return self
 
     def find_lr(self, plot=True):
