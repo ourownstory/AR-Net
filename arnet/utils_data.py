@@ -1,6 +1,20 @@
 import pandas as pd
+import numpy as np
 
 from arnet.create_ar_data import load_from_file
+
+
+def estimate_noise(series):
+    return float(np.mean(np.abs(series.iloc[:-1].values - series.iloc[1:].values)))
+
+
+def split_by_p_valid(valid_p, n_sample, verbose=False):
+    split_idx = int(n_sample * (1 - valid_p))
+    splits = [list(range(split_idx)), list(range(split_idx, n_sample))]
+    if verbose:
+        print("split on idx: ", split_idx)
+        print("split sizes: ", [len(x) for x in splits])
+    return splits
 
 
 def tabularize_univariate(series, n_lags, n_forecasts=1, nested_list=False):
