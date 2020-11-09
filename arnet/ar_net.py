@@ -25,7 +25,7 @@ import logging
 from arnet.make_dataset import load_from_file, tabularize_univariate
 from arnet.utils import pad_ar_params, estimate_noise, split_by_p_valid, nice_print_list, compute_sTPE, coeff_from_model
 from arnet.plotting import plot_weights, plot_prediction_sample, plot_error_scatter
-from arnet import utils
+from arnet import utils, plotting
 
 log = logging.getLogger("AR-Net")
 
@@ -188,6 +188,8 @@ class ARNet:
     sparsity: float = None
     ar_params: list = None
     loss_func: str = "huber"
+    n_epoch: int = 10
+    lr: float = None
     dls: DataLoaders = field(init=False)
     learn: TabularLearner = field(init=False)
 
@@ -207,7 +209,7 @@ class ARNet:
         log.debug("df columns", list(df_all.columns))
         log.debug("df shape", df_all.shape)
         # log.debug("df head(3)", df_all.head(3))
-        return self
+        return df_all
 
     def make_datasets(
         self,
@@ -272,3 +274,44 @@ class ARNet:
         )
         log.debug(self.learn.model)
         return self
+
+    def find_lr(self, plot=True):
+        if self.learn is None:
+            raise ValueError("create learner first.")
+        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=400, show_plot=plot)
+        if plot:
+            plt.show()
+        log.debug("lr at minimum: {}; (steepest lr: {})".format(lr_at_min, lr_steep))
+        lr = lr_at_min / 10
+        log.info("Optimal learning rate: {}".format(lr))
+        self.lr = lr
+        return self
+
+    def fit(self, n_epoch=None, lr=None, plot=True, cycles=2):
+        n_epoch = self.n_epoch if n_epoch is None else n_epoch
+        lr = self.lr if lr is None else lr
+        if lr is None:
+            self.find_lr(plot=False)
+            lr = self.lr
+        for i in range(0, cycles):
+            self.learn.fit_one_cycle(n_epoch=n_epoch, lr_max=lr)
+            lr = lr / 10
+        if plot:
+            self.learn.recorder.plot_loss()
+            plt.show()
+        # record Coeff
+        self.coeff = utils.coeff_from_model(self.learn.model)
+        return self
+
+    def fit_with_defaults(self, series):
+        self.make_datasets(self.tabularize(series))
+        self.create_learner()
+        self.fit()
+
+    def plot_weights(self, **kwargs):
+        plotting.plot_weights(
+            ar_val=self.ar_order,
+            weights=self.coeff,
+            ar=self.ar_params,
+            **kwargs,
+        )
