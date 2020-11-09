@@ -21,16 +21,14 @@ log.parent.setLevel("WARNING")
 
 DIR = pathlib.Path(__file__).parent.parent.absolute()
 data_path = os.path.join(DIR, "ar_data")
-
 results_path = os.path.join(data_path, "results_test")
-
-EPOCHS = 3
+EPOCHS = 2
 
 
 class IntegrationTests(unittest.TestCase):
     verbose = False
     plot = False
-    save = True
+    save = False
 
     def test_everything_created_ar_data(self):
         self.save = True
@@ -44,6 +42,7 @@ class IntegrationTests(unittest.TestCase):
         sparsity = 0.3  # guesstimate
         data_name = "ar_3_ma_0_noise_0.100_len_10000"
         df, data_config = arnet.load_from_file(data_path, data_name, load_config=True, verbose=self.verbose)
+        df = df[:1000]
 
         # sparse AR: (for non-sparse, set sparsity to 1.0)
         ar_order = int(1 / sparsity * data_config["ar_order"])
@@ -67,7 +66,7 @@ class IntegrationTests(unittest.TestCase):
         # if you know the best learning rate:
         # learn.fit(n_epoch, 1e-2)
         # else use onecycle
-        learn.fit_one_cycle(n_epoch=2, lr_max=lr_at_min / 10)
+        learn.fit_one_cycle(n_epoch=EPOCHS, lr_max=lr_at_min / 10)
 
         # Look at Coeff
         coeff = arnet.coeff_from_model(learn.model)
@@ -94,7 +93,7 @@ class IntegrationTests(unittest.TestCase):
             infer = load_learner(fname=os.path.join(results_path, model_name), cpu=True)
         # can unfreeze the model and fine_tune
         learn.unfreeze()
-        learn.fit_one_cycle(2, lr_at_min / 100)
+        learn.fit_one_cycle(1, lr_at_min / 100)
 
         coeff2 = arnet.coeff_from_model(learn.model)
         log.info("ar params", arnet.nice_print_list(ar_params))
@@ -107,10 +106,5 @@ class IntegrationTests(unittest.TestCase):
             arnet.plot_weights(
                 ar_val=len(ar_params[0]), weights=coeff2[0], ar=ar_params[0], save=not self.plot, savedir=results_path
             )
-
         if self.save:
             shutil.rmtree(results_path)
-
-
-if __name__ == "__main__":
-    unittest.main()
