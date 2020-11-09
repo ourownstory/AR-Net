@@ -192,6 +192,7 @@ class ARNet:
     lr: float = None
     dls: DataLoaders = field(init=False)
     learn: TabularLearner = field(init=False)
+    coeff: list = field(init=False)
 
     def __post_init__(self):
         if self.log_level is not None:
@@ -291,7 +292,7 @@ class ARNet:
         n_epoch = self.n_epoch if n_epoch is None else n_epoch
         lr = self.lr if lr is None else lr
         if lr is None:
-            self.find_lr(plot=False)
+            self.find_lr(plot=plot)
             lr = self.lr
         for i in range(0, cycles):
             self.learn.fit_one_cycle(n_epoch=n_epoch, lr_max=lr)
@@ -306,7 +307,8 @@ class ARNet:
     def fit_with_defaults(self, series):
         self.make_datasets(self.tabularize(series))
         self.create_learner()
-        self.fit()
+        self.fit(plot=False)
+        return self
 
     def plot_weights(self, **kwargs):
         plotting.plot_weights(
