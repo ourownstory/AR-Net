@@ -4,27 +4,6 @@ import seaborn as sns
 import os
 
 
-def plot_weights_copy(ar_val, weights, ar, model_name="AR-Net", save=False, savedir="results"):
-    df = pd.DataFrame(
-        zip(
-            list(range(1, ar_val + 1)) * 2,
-            ["AR-Process (True)"] * ar_val + [model_name] * ar_val,
-            list(ar) + list(weights),
-        ),
-        columns=["AR-coefficient (lag number)", "model", "value (weight)"],
-    )
-    plt.figure(figsize=(10, 6))
-    palette = {"Classic-AR": "C0", "AR-Net": "C1", "AR-Process (True)": "k"}
-    sns.barplot(data=df, palette=palette, x="AR-coefficient (lag number)", hue="model", y="value (weight)")
-    if save:
-        if not os.path.exists(savedir):
-            os.makedirs(savedir)
-        figname = "weights_{}_{}.png".format(ar_val, model_name)
-        plt.savefig(os.path.join(savedir, figname), dpi=600, bbox_inches="tight")
-    else:
-        plt.show()
-
-
 def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, savedir="results"):
     if ar is not None:
         df = pd.DataFrame(
