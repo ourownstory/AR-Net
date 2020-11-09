@@ -4,7 +4,7 @@ import seaborn as sns
 import os
 
 
-def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, savedir="results"):
+def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, savedir="results", figsize=(10, 6)):
     if ar is not None:
         df = pd.DataFrame(
             zip(
@@ -14,6 +14,9 @@ def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, save
             ),
             columns=["AR-coefficient (lag number)", "model", "value (weight)"],
         )
+        plt.figure(figsize=figsize)
+        palette = {"Classic-AR": "C0", "AR-Net": "C1", "AR-Process (True)": "k"}
+        sns.barplot(data=df, palette=palette, x="AR-coefficient (lag number)", hue="model", y="value (weight)")
     else:
         df = pd.DataFrame(
             zip(
@@ -23,9 +26,8 @@ def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, save
             ),
             columns=["AR-coefficient (lag number)", "model", "value (weight)"],
         )
-    plt.figure(figsize=(10, 6))
-    palette = {"Classic-AR": "C0", "AR-Net": "C1", "AR-Process (True)": "k"}
-    sns.barplot(data=df, palette=palette, x="AR-coefficient (lag number)", hue="model", y="value (weight)")
+        plt.figure(figsize=figsize)
+        sns.barplot(data=df, x="AR-coefficient (lag number)", hue="model", y="value (weight)")
     if save:
         if not os.path.exists(savedir):
             os.makedirs(savedir)
