@@ -12,7 +12,7 @@ from fastai.tabular.all import *
 # from fastai.data.core import DataLoaders
 # from fastai.learner import Metric
 # from fastai.metrics import mse, mae, huber
-from fastai import metrics
+import fastai
 
 # from fastai.tabular.core import TabularPandas, TabDataLoader
 # from fastai.tabular.learner import tabular_learner
@@ -164,11 +164,11 @@ def init_ar_learner(
 def get_loss_func(loss_func):
     if type(loss_func) == str:
         if loss_func.lower() == "mse":
-            loss_func = metrics.mse
-        elif loss_func.lower in ["huber", "smooth_l1", "smoothl1"]:
-            loss_func = metrics.huber
-        elif loss_func.lower in ["mae", "l1"]:
-            loss_func = metrics.mae
+            loss_func = fastai.metrics.mse
+        elif loss_func.lower() in ["huber", "smooth_l1", "smoothl1"]:
+            loss_func = fastai.metrics.huber
+        elif loss_func.lower() in ["mae", "l1"]:
+            loss_func = fastai.metrics.mae
         else:
             log.error("loss {} not defined".format(loss_func))
             loss_func = None
@@ -258,7 +258,7 @@ class ARNet:
             callbacks.append(SparsifyAR(sparsity, self.est_noise))
             log.info("reg lam: ", callbacks[0].lam)
 
-        metrics = [mse, mae]
+        metrics = [fastai.metrics.mse, fastai.metrics.mae]
         if ar_params is not None:
             metrics.append(sTPE(ar_params, at_epoch_end=False))
 
@@ -270,7 +270,7 @@ class ARNet:
             n_out=self.n_forecasts,  # None calls get_c(dls)
             train_bn=False,  # passed to Learner
             metrics=metrics,  # passed on to TabularLearner, to parent Learner
-            loss_func=mse,
+            loss_func=self.loss_func,
             cbs=callbacks,
         )
         log.debug(self.learn.model)

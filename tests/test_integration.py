@@ -9,6 +9,8 @@ import warnings
 
 warnings.filterwarnings("ignore", message=".*nonzero.*", category=UserWarning)
 
+import fastai
+
 ## lazy imports ala fastai2 style (needed for nice print functionality)
 from fastai.basics import *
 from fastai.tabular.all import *
@@ -130,7 +132,6 @@ class IntegrationTests(unittest.TestCase):
             n_epoch=EPOCHS,
             sparsity=sparsity,
             ar_params=ar_params,
-            loss_func=fastai.metrics.huber,
         )
         m = m.fit_with_defaults(series=df)
 
