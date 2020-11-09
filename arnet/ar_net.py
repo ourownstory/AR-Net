@@ -1,5 +1,7 @@
 import os
 import torch
+from dataclasses import dataclass, field
+import torch.nn.functional as F
 
 ## lazy imports ala fastai2 style (for nice print functionality)
 from fastai.basics import *
@@ -9,16 +11,23 @@ from fastai.tabular.all import *
 # from fastai.basics import Callback
 # from fastai.data.core import DataLoaders
 # from fastai.learner import Metric
-# from fastai.metrics import mse, mae
+# from fastai.metrics import mse, mae, huber
+from fastai import metrics
+
 # from fastai.tabular.core import TabularPandas, TabDataLoader
 # from fastai.tabular.learner import tabular_learner
 # from fastai.torch_core import to_detach
 # from fastai.data.transforms import Normalize
 
+import logging
+
 ## import arnet
 from arnet.make_dataset import load_from_file, tabularize_univariate
 from arnet.utils import pad_ar_params, estimate_noise, split_by_p_valid, nice_print_list, compute_sTPE, coeff_from_model
 from arnet.plotting import plot_weights, plot_prediction_sample, plot_error_scatter
+from arnet import utils
+
+log = logging.getLogger("AR-Net")
 
 
 class SparsifyAR(Callback):
@@ -150,3 +159,116 @@ def init_ar_learner(
     if verbose:
         print(learn.model)
     return learn
+
+
+def get_loss_func(loss_func):
+    if type(loss_func) == str:
+        if loss_func.lower() == "mse":
+            loss_func = metrics.mse
+        elif loss_func.lower in ["huber", "smooth_l1", "smoothl1"]:
+            loss_func = metrics.huber
+        elif loss_func.lower in ["mae", "l1"]:
+            loss_func = metrics.mae
+        else:
+            log.error("loss {} not defined".format(loss_func))
+            loss_func = None
+    return loss_func
+
+
+@dataclass
+class ARNet:
+    ar_order: int
+    n_forecasts: int = 1
+    verbose: bool = False
+    log_level: str = None
+    est_noise: float = None
+    train_bs: int = 32
+    valid_bs: int = 1024
+    valid_p: float = 0.1
+    sparsity: float = None
+    ar_params: list = None
+    loss_func: str = "huber"
+    dls: DataLoaders = field(init=False)
+    learn: TabularLearner = field(init=False)
+
+    def __post_init__(self):
+        if self.log_level is not None:
+            utils.set_logger_level(log, self.log_level)
+        self.loss_func = get_loss_func(self.loss_func)
+
+    def tabularize(self, series):
+        if self.est_noise is None:
+            self.est_noise = estimate_noise(series)
+            log.info("estimated noise of series", self.est_noise)
+
+        df_all = tabularize_univariate(series, self.ar_order, self.n_forecasts)
+
+        log.debug("tabularized df")
+        log.debug("df columns", list(df_all.columns))
+        log.debug("df shape", df_all.shape)
+        # log.debug("df head(3)", df_all.head(3))
+        return self
+
+    def make_datasets(
+        self,
+        df_all,
+        valid_p=None,
+        train_bs=None,
+        valid_bs=None,
+    ):
+        valid_p = self.valid_p if valid_p is None else valid_p
+        train_bs = self.train_bs if train_bs is None else train_bs
+        valid_bs = self.valid_bs if valid_bs is None else valid_bs
+
+        # preprocess?
+        # procs = [Normalize]
+        procs = []
+        # split
+        splits = split_by_p_valid(valid_p, len(df_all))
+        cont_names = [col for col in list(df_all.columns) if "x_" == col[:2]]
+        target_names = [col for col in list(df_all.columns) if "y_" == col[:2]]
+        tp = TabularPandas(
+            df_all, procs=procs, cat_names=None, cont_names=cont_names, y_names=target_names, splits=splits
+        )
+        log.info("cont var num", len(tp.cont_names), tp.cont_names)
+        # log.debug(tp.iloc[0:5])
+
+        # next: data loader, learner
+        trn_dl = TabDataLoader(tp.train, bs=train_bs, shuffle=True, drop_last=True)
+        val_dl = TabDataLoader(tp.valid, bs=valid_bs)
+        self.dls = DataLoaders(trn_dl, val_dl)
+        log.debug("showing batch")
+        log.debug(self.dls.show_batch(show=False))
+        return self
+
+    def create_learner(
+        self,
+        sparsity=None,
+        ar_params=None,
+        loss_func=None,
+    ):
+        sparsity = self.sparsity if sparsity is None else sparsity
+        ar_params = self.ar_params if ar_params is None else ar_params
+        loss_func = self.loss_func if loss_func is None else get_loss_func(loss_func)
+        callbacks = []
+        if sparsity is not None:
+            callbacks.append(SparsifyAR(sparsity, self.est_noise))
+            log.info("reg lam: ", callbacks[0].lam)
+
+        metrics = [mse, mae]
+        if ar_params is not None:
+            metrics.append(sTPE(ar_params, at_epoch_end=False))
+
+        tm_config = {"use_bn": False, "bn_final": False, "bn_cont": False}
+        self.learn = tabular_learner(
+            self.dls,
+            layers=[],  # Note: None defaults to [200, 100]
+            config=tm_config,  # None calls tabular_config()
+            n_out=self.n_forecasts,  # None calls get_c(dls)
+            train_bn=False,  # passed to Learner
+            metrics=metrics,  # passed on to TabularLearner, to parent Learner
+            loss_func=mse,
+            cbs=callbacks,
+        )
+        log.debug(self.learn.model)
+        return self

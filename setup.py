@@ -11,7 +11,7 @@ with open(os.path.join(dir_repo, "README.md"), encoding="utf-8") as f:
 
 setuptools.setup(
     name="arnet",
-    version="1.1.1",
+    version="1.2.0",
     description="A simple auto-regressive Neural Network for time-series",
     author="Oskar Triebe",
     url="https://github.com/ourownstory/AR-Net",
