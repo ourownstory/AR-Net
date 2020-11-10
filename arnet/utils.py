@@ -17,19 +17,6 @@ def pad_ar_params(ar_params, n_lags, n_forecasts=1):
     return [ar_params[0] + [0.0] * (n_lags - len(ar_params[0]))]
 
 
-def estimate_noise(series):
-    return float(np.mean(np.abs(series.iloc[:-1].values - series.iloc[1:].values)))
-
-
-def split_by_p_valid(valid_p, n_sample, verbose=False):
-    split_idx = int(n_sample * (1 - valid_p))
-    splits = [list(range(split_idx)), list(range(split_idx, n_sample))]
-    if verbose:
-        print("split on idx: ", split_idx)
-        print("split sizes: ", [len(x) for x in splits])
-    return splits
-
-
 def nice_print_list(data):
     if all([isinstance(data[i], list) for i in range(len(data))]):
         return [nice_print_list(data[i]) for i in range(len(data))]
@@ -49,3 +36,21 @@ def coeff_from_model(model, reversed_weights=True):
         if isinstance(layer, torch.nn.Linear):
             weights = [list(x[::-1] if reversed_weights else x) for x in layer.weight.detach().numpy()]
             return weights  # note: preliminary exit of loop is a feature.
+
+
+def set_logger_level(logger, log_level=None, include_handlers=False):
+    if log_level is None:
+        logger.warning("Failed to set log_level to None.")
+    elif log_level not in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", 10, 20, 30, 40, 50):
+        logger.error(
+            "Failed to set log_level to {}."
+            "Please specify a valid log level from: "
+            "'DEBUG', 'INFO', 'WARNING', 'ERROR' or 'CRITICAL'"
+            "".format(log_level)
+        )
+    else:
+        logger.setLevel(log_level)
+        if include_handlers:
+            for h in logger.handlers:
+                h.setLevel(log_level)
+        logger.debug("Set log level to {}".format(log_level))

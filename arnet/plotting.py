@@ -4,7 +4,7 @@ import seaborn as sns
 import os
 
 
-def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, savedir="results", figsize=(10, 6)):
+def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, savedir="results", figsize=(10, 4)):
     if ar is not None:
         df = pd.DataFrame(
             zip(
@@ -32,16 +32,16 @@ def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, save
         if not os.path.exists(savedir):
             os.makedirs(savedir)
         figname = "weights_{}_{}.png".format(ar_val, model_name)
-        plt.savefig(os.path.join(savedir, figname), dpi=600, bbox_inches="tight")
+        plt.savefig(os.path.join(savedir, figname), dpi=300, bbox_inches="tight")
     else:
         plt.show()
 
 
-def plot_prediction_sample(predicted, actual, num_obs=100, model_name="AR-Net", save=False, savedir="results"):
+def plot_prediction_sample(predicted, actual, model_name="AR-Net", save=False, savedir="results"):
     fig2 = plt.figure()
     fig2.set_size_inches(10, 6)
-    plt.plot(actual[0:num_obs])
-    plt.plot(predicted[0:num_obs])
+    plt.plot(actual)
+    plt.plot(predicted)
     plt.legend(["Actual Time-Series", "{}-Prediction".format(model_name)])
     if save:
         if not os.path.exists(savedir):
