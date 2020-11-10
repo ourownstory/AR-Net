@@ -33,7 +33,7 @@ class IntegrationTests(unittest.TestCase):
     plot = False
     save = False
 
-    def test_legacy(self):
+    def test_legacy_ar(self):
         self.save = True
         if self.save:
             if not os.path.exists(results_path):
@@ -111,3 +111,27 @@ class IntegrationTests(unittest.TestCase):
             )
         if self.save:
             shutil.rmtree(results_path)
+
+    def test_legacy_random(self):
+        df = pd.DataFrame({"x": [random.gauss(0.0, 1.0) for i in range(1000)]})
+        learn = arnet.init_ar_learner(
+            series=df,
+            ar_order=3,
+            n_forecasts=1,
+            valid_p=0.1,
+            sparsity=0.3,
+            train_bs=32,
+            valid_bs=1024,
+            verbose=False,
+        )
+        # find Learning Rate
+        lr_at_min, lr_steep = learn.lr_find(start_lr=1e-6, end_lr=1, num_it=1000, show_plot=self.plot)
+        if self.plot:
+            plt.show()
+        print("lr at minimum: {}; steeptes lr: {}".format(lr_at_min, lr_steep))
+        learn.fit_one_cycle(n_epoch=n_epoch, lr_max=lr_at_min / 10)
+        if self.plot:
+            learn.recorder.plot_loss()
+            plt.show()
+        # record Coeff
+        coeff = arnet.coeff_from_model(learn.model)
