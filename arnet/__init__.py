@@ -16,6 +16,7 @@ f_handler.setFormatter(f_format)
 log.addHandler(c_handler)
 log.addHandler(f_handler)
 
+# lazy imports ala fastai2 style (for nice print functionality)
 from fastai.basics import *
 from fastai.tabular.all import *
 

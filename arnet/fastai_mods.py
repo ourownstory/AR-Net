@@ -20,14 +20,27 @@ def huber(inp, targ):
 class SparsifyAR(Callback):
     """Callback that adds regularization of first linear layer according to AR-Net paper"""
 
-    def __init__(self, est_sparsity, est_noise=1.0, reg_strength=0.02, **kwargs):
+    def __init__(
+        self,
+        est_sparsity,
+        est_noise=1.0,
+        reg_strength=0.02,
+        start_pct=0.0,
+        full_pct=0.5,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
-        self.lam = 0.0
+        self.lam_max = 0.0
         if est_sparsity is not None:
-            self.lam = reg_strength * est_noise * (1.0 / est_sparsity - 1.0)
+            self.lam_max = reg_strength * est_noise * (1.0 / est_sparsity - 1.0)
+        self.start_pct = start_pct
+        self.full_pct = full_pct
+        self.lam = None
 
     def after_loss(self):
         if not self.training:
+            return
+        if self.lam_max == 0 or self.lam == 0:
             return
         abs_weights = None
         for layer in self.learn.model.modules():
@@ -37,6 +50,17 @@ class SparsifyAR(Callback):
         if abs_weights is None:
             raise NotImplementedError("weight regualarization only implemented for model with Linear layer")
         reg = torch.div(2.0, 1.0 + torch.exp(-3.0 * abs_weights.pow(1.0 / 3.0))) - 1.0
+
+        progress_iter = (1.0 + self.learn.iter) / (1.0 * self.learn.n_iter)
+        progress = (progress_iter + self.learn.epoch) / (1.0 * self.learn.n_epoch)
+        progress = (progress - self.start_pct) / (self.full_pct - self.start_pct)
+        if progress <= 0:
+            self.lam = 0.0
+        elif progress < 1:
+            self.lam = self.lam_max * progress ** 2
+        else:
+            self.lam = self.lam_max
+
         self.learn.loss += self.lam * torch.mean(reg)
 
     _docs = dict(after_loss="Add regularization of first linear layer")

@@ -3,18 +3,15 @@ import logging
 
 import fastai
 
-## lazy imports ala fastai2 style (for nice print functionality)
+# lazy imports ala fastai2 style (for nice print functionality)
 from fastai.basics import *
 from fastai.tabular.all import *
 
-## explicit imports (for reference)
-# from fastai.basics import Callback
+# explicit imports (for reference)
 # from fastai.data.core import DataLoaders
-# from fastai.learner import Metric
-# from fastai.metrics import mse, mae, huber
+# from fastai.metrics import mse, mae
 # from fastai.tabular.core import TabularPandas, TabDataLoader
 # from fastai.tabular.learner import tabular_learner
-# from fastai.torch_core import to_detach
 # from fastai.data.transforms import Normalize
 
 
@@ -22,8 +19,7 @@ from fastai.tabular.all import *
 from arnet.utils_data import load_from_file, tabularize_univariate, estimate_noise, split_by_p_valid
 from arnet.utils import pad_ar_params, nice_print_list, compute_sTPE, coeff_from_model
 from arnet import utils, plotting
-from arnet.ar_net import SparsifyAR, sTPE
-
+from arnet.fastai_mods import SparsifyAR, sTPE
 
 log = logging.getLogger("ARNet")
 

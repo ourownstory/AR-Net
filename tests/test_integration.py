@@ -43,8 +43,8 @@ class IntegrationTests(unittest.TestCase):
         m = m.create_learner(
             sparsity=0.3,
         )
-        m = m.find_lr(plot=True)
-        m = m.fit(cycles=3, plot=True)
+        m = m.find_lr(plot=False)
+        m = m.fit(cycles=3, plot=False)
         log.info("coeff of random data: {}".format(m.coeff))
 
     def test_ar_data(self):

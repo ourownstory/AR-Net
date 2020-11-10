@@ -18,8 +18,10 @@ class ARNet:
     ar_order: int
     sparsity: float = None
     est_noise: float = None
+    start_reg_pct: float = 0.0
+    full_reg_pct: float = 0.5
     n_forecasts: int = 1
-    n_epoch: int = 10
+    n_epoch: int = 20
     lr: float = None
     loss_func: str = "huber"
     train_bs: int = 32
@@ -100,10 +102,14 @@ class ARNet:
         sparsity=None,
         ar_params=None,
         loss_func=None,
+        start_reg_pct=None,
+        full_reg_pct=None,
     ):
         sparsity = self.sparsity if sparsity is None else sparsity
         ar_params = self.ar_params if ar_params is None else ar_params
         loss_func = self.loss_func if loss_func is None else fastai_mods.get_loss_func(loss_func)
+        start_reg_pct = self.start_reg_pct if start_reg_pct is None else start_reg_pct
+        full_reg_pct = self.full_reg_pct if full_reg_pct is None else full_reg_pct
 
         metrics = ["MSE", "MAE"]
         metrics = [fastai_mods.get_loss_func(m) for m in metrics]
@@ -112,8 +118,15 @@ class ARNet:
 
         callbacks = []
         if sparsity is not None:
-            callbacks.append(fastai_mods.SparsifyAR(sparsity, self.est_noise))
-            log.info("reg lam: {}".format(callbacks[0].lam))
+            regularizer = fastai_mods.SparsifyAR(
+                sparsity,
+                self.est_noise,
+                start_pct=start_reg_pct,
+                full_pct=full_reg_pct,
+            )
+
+            callbacks.append(regularizer)
+            log.info("reg lam (max): {}".format(callbacks[0].lam_max))
 
         tm_config = {"use_bn": False, "bn_final": False, "bn_cont": False}
         self.learn = tabular_learner(
@@ -132,7 +145,7 @@ class ARNet:
     def find_lr(self, plot=True):
         if self.learn is None:
             raise ValueError("create learner first.")
-        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=1000, show_plot=plot)
+        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=500, show_plot=plot)
         if plot:
             plt.show()
         log.debug("lr at minimum: {}; (steepest lr: {})".format(lr_at_min, lr_steep))
@@ -141,17 +154,18 @@ class ARNet:
         self.lr = lr
         return self
 
-    def fit(self, n_epoch=None, lr=None, cycles=3, plot=True):
+    def fit(self, n_epoch=None, lr=None, cycles=1, plot=True):
         n_epoch = self.n_epoch if n_epoch is None else n_epoch
         lr = self.lr if lr is None else lr
         if lr is None:
             self.find_lr(plot=plot)
             lr = self.lr
         for i in range(0, cycles):
-            self.learn.fit_one_cycle(n_epoch=n_epoch, lr_max=lr)
+            self.learn.fit_one_cycle(n_epoch=n_epoch, lr_max=lr, div=25.0, div_final=10000.0, pct_start=0.25)
             lr = lr / 10
+            if plot:
+                self.learn.recorder.plot_loss()
         if plot:
-            self.learn.recorder.plot_loss()
             plt.show()
         # record Coeff
         self.coeff = utils.coeff_from_model(self.learn.model)
