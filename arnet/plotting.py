@@ -37,11 +37,11 @@ def plot_weights(ar_val, weights, ar=None, model_name="AR-Net", save=False, save
         plt.show()
 
 
-def plot_prediction_sample(predicted, actual, num_obs=100, model_name="AR-Net", save=False, savedir="results"):
+def plot_prediction_sample(predicted, actual, model_name="AR-Net", save=False, savedir="results"):
     fig2 = plt.figure()
     fig2.set_size_inches(10, 6)
-    plt.plot(actual[0:num_obs])
-    plt.plot(predicted[0:num_obs])
+    plt.plot(actual)
+    plt.plot(predicted)
     plt.legend(["Actual Time-Series", "{}-Prediction".format(model_name)])
     if save:
         if not os.path.exists(savedir):

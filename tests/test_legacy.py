@@ -28,7 +28,7 @@ results_path = os.path.join(data_path, "results_test")
 EPOCHS = 2
 
 
-class IntegrationTests(unittest.TestCase):
+class LegacyTests(unittest.TestCase):
     verbose = False
     plot = False
     save = False
@@ -114,7 +114,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_legacy_random(self):
         df = pd.DataFrame({"x": [random.gauss(0.0, 1.0) for i in range(1000)]})
-        learn = arnet.init_ar_learner(
+        learn = init_ar_learner(
             series=df,
             ar_order=3,
             n_forecasts=1,
@@ -129,7 +129,7 @@ class IntegrationTests(unittest.TestCase):
         if self.plot:
             plt.show()
         print("lr at minimum: {}; steeptes lr: {}".format(lr_at_min, lr_steep))
-        learn.fit_one_cycle(n_epoch=n_epoch, lr_max=lr_at_min / 10)
+        learn.fit_one_cycle(n_epoch=EPOCHS, lr_max=lr_at_min / 10)
         if self.plot:
             learn.recorder.plot_loss()
             plt.show()

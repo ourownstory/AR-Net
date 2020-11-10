@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import logging
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -7,6 +8,7 @@ from fastai.data.core import DataLoaders
 from fastai.tabular.core import TabularPandas, TabDataLoader
 from fastai.tabular.learner import tabular_learner, TabularLearner
 from fastai.data.transforms import Normalize
+from fastai.learner import load_learner
 
 from arnet import utils, utils_data, plotting, fastai_mods
 
@@ -184,3 +186,29 @@ class ARNet:
             ar=self.ar_params,
             **kwargs,
         )
+
+    def plot_fitted_obs(self, num_obs=100, **kwargs):
+        preds, y = self.learn.get_preds()
+        if num_obs is not None:
+            y = y[0:num_obs]
+            preds = preds[0:num_obs]
+        plotting.plot_prediction_sample(preds, y, **kwargs)
+
+    def plot_errors(self, **kwargs):
+        preds, y = self.learn.get_preds()
+        plotting.plot_error_scatter(preds, y, **kwargs)
+
+    def save_model(self, results_path="results", model_name=None):
+        # self.learn.freeze()
+        if model_name is None:
+            model_name = "ar{}_sparse_{:.3f}_ahead_{}_epoch_{}.pkl".format(
+                self.ar_order, self.sparsity, self.n_forecasts, self.n_epoch
+            )
+        self.learn.export(fname=os.path.join(results_path, model_name))
+        return self
+
+    def load_model(self, results_path="results", model_name=None, cpu=True):
+        self.learn = load_learner(fname=os.path.join(results_path, model_name), cpu=cpu)
+        # can unfreeze the model and fine_tune
+        self.learn.unfreeze()
+        return self
