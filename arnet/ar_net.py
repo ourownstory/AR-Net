@@ -182,7 +182,7 @@ class ARNet:
     def plot_weights(self, **kwargs):
         plotting.plot_weights(
             ar_val=self.ar_order,
-            weights=self.coeff,
+            weights=self.coeff[0],
             ar=self.ar_params,
             **kwargs,
         )
@@ -200,9 +200,10 @@ class ARNet:
 
     def save_model(self, results_path="results", model_name=None):
         # self.learn.freeze()
+        sparsity = 1.0 if self.sparsity is None else self.sparsity
         if model_name is None:
             model_name = "ar{}_sparse_{:.3f}_ahead_{}_epoch_{}.pkl".format(
-                self.ar_order, self.sparsity, self.n_forecasts, self.n_epoch
+                self.ar_order, sparsity, self.n_forecasts, self.n_epoch
             )
         self.learn.export(fname=os.path.join(results_path, model_name))
         return self

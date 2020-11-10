@@ -10,13 +10,6 @@ import pandas as pd
 import warnings
 
 warnings.filterwarnings("ignore", message=".*nonzero.*", category=UserWarning)
-
-from fastai.learner import load_learner
-
-## lazy imports ala fastai2 style (needed for nice print functionality)
-# from fastai.basics import *
-# from fastai.tabular.all import *
-
 import arnet
 
 log = logging.getLogger("ARNet.test")
@@ -69,12 +62,13 @@ class IntegrationTests(unittest.TestCase):
         m = m.fit_with_defaults(series=df)
 
         # Optional:save and create inference learner
-        model_name = "ar{}_sparse_{:.3f}_ahead_{}_epoch_{}.pkl".format(m.ar_order, m.sparsity, m.n_forecasts, m.n_epoch)
+        sparsity = 1.0 if m.sparsity is None else m.sparsity
+        model_name = "ar{}_sparse_{:.3f}_ahead_{}_epoch_{}.pkl".format(m.ar_order, sparsity, m.n_forecasts, m.n_epoch)
         m = m.save_model(results_path=results_path, model_name=model_name)
         # can be loaded like this
         m = m.load_model(results_path, model_name)
         # can unfreeze the model and fine_tune
-        m.learn.fit_one_cycle(2, 0.0001)
+        log.info("loaded coeff: {}".format(m.coeff))
 
         shutil.rmtree(results_path)
 
@@ -100,14 +94,3 @@ class IntegrationTests(unittest.TestCase):
         # Look at Coeff
         log.info("ar params: {}".format(arnet.nice_print_list(ar_params)))
         log.info("model weights: {}".format(arnet.nice_print_list(m.coeff)))
-
-        # if save:
-        #     # Optional:save and create inference learner
-        #     learn.freeze()
-        #     model_name = "ar{}_sparse_{:.3f}_ahead_{}_epoch_{}.pkl".format(ar_order, sparsity, n_forecasts, n_epoch)
-        #     learn.export(fname=os.path.join(results_path, model_name))
-        #     # can be loaded like this
-        #     infer = load_learner(fname=os.path.join(results_path, model_name), cpu=True)
-        # # can unfreeze the model and fine_tune
-        # learn.unfreeze()
-        # learn.fit_one_cycle(1, lr_at_min / 100)
