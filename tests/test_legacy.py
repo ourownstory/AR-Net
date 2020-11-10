@@ -84,7 +84,7 @@ class LegacyTests(unittest.TestCase):
             arnet.plot_weights(
                 ar_val=len(ar_params[0]), weights=coeff[0], ar=ar_params[0], save=not self.plot, savedir=results_path
             )
-            arnet.plot_prediction_sample(preds, y, num_obs=100, save=not self.plot, savedir=results_path)
+            arnet.plot_prediction_sample(preds[:100], y[:100], save=not self.plot, savedir=results_path)
             arnet.plot_error_scatter(preds, y, save=not self.plot, savedir=results_path)
 
         if self.save:
