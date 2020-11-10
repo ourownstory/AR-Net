@@ -1,121 +1,43 @@
 from dataclasses import dataclass, field
 import logging
+import pandas as pd
+import matplotlib.pyplot as plt
 
-import torch
-import fastai
-
-## lazy imports ala fastai2 style (for nice print functionality)
-# from fastai.basics import *
-# from fastai.tabular.all import *
-## explicit imports (for reference)
-from fastai.basics import Callback
 from fastai.data.core import DataLoaders
-from fastai.learner import Metric
 from fastai.tabular.core import TabularPandas, TabDataLoader
 from fastai.tabular.learner import tabular_learner, TabularLearner
+from fastai.data.transforms import Normalize
 
-from arnet import utils, utils_data, plotting
+from arnet import utils, utils_data, plotting, fastai_mods
 
 log = logging.getLogger("ARNet")
-
-
-class SparsifyAR(Callback):
-    """Callback that adds regularization of first linear layer according to AR-Net paper"""
-
-    def __init__(self, est_sparsity, est_noise=1.0, reg_strength=0.02, **kwargs):
-        super().__init__(**kwargs)
-        self.lam = 0.0
-        if est_sparsity is not None:
-            self.lam = reg_strength * est_noise * (1.0 / est_sparsity - 1.0)
-
-    def after_loss(self):
-        if not self.training:
-            return
-        abs_weights = None
-        for layer in self.learn.model.modules():
-            if isinstance(layer, torch.nn.Linear):
-                abs_weights = torch.abs(layer.weight)
-                break
-        if abs_weights is None:
-            raise NotImplementedError("weight regualarization only implemented for model with Linear layer")
-        reg = torch.div(2.0, 1.0 + torch.exp(-3.0 * abs_weights.pow(1.0 / 3.0))) - 1.0
-        self.learn.loss += self.lam * torch.mean(reg)
-
-    _docs = dict(after_loss="Add regularization of first linear layer")
-
-
-class sTPE(Metric):
-    """ "
-    Symmetrical Total Percentage Error of learned weights compared to underlying AR coefficients.
-    Computed as the average over snapshots at each batch.
-    """
-
-    def __init__(self, ar_params, at_epoch_end=False):
-        self.ar_params = ar_params
-        self.at_epoch_end = at_epoch_end
-
-    def reset(self):
-        self.total, self.count = 0.0, 0
-        self.sTPE = None
-
-    def accumulate(self, learn):
-        self.sTPE = fastai.torch_core.to_detach(
-            utils.compute_sTPE(
-                est=utils.coeff_from_model(model=learn.model, reversed_weights=True),
-                real=self.ar_params,
-            )
-        )
-        self.total += self.sTPE
-        self.count += 1
-
-    @property
-    def value(self):
-        if self.at_epoch_end:
-            return self.sTPE
-        return self.total / self.count if self.count != 0 else None
-
-    @property
-    def name(self):
-        return "sTPE of AR coeff"
-
-
-def get_loss_func(loss_func):
-    if type(loss_func) == str:
-        if loss_func.lower() == "mse":
-            loss_func = fastai.metrics.mse
-        elif loss_func.lower() in ["huber", "smooth_l1", "smoothl1"]:
-            loss_func = fastai.metrics.huber
-        elif loss_func.lower() in ["mae", "l1"]:
-            loss_func = fastai.metrics.mae
-        else:
-            log.error("loss {} not defined".format(loss_func))
-            loss_func = None
-    return loss_func
 
 
 @dataclass
 class ARNet:
     ar_order: int
-    n_forecasts: int = 1
-    verbose: bool = False
-    log_level: str = None
+    sparsity: float = None
     est_noise: float = None
+    n_forecasts: int = 1
+    n_epoch: int = 10
+    lr: float = None
+    loss_func: str = "huber"
     train_bs: int = 32
     valid_bs: int = 1024
     valid_p: float = 0.1
-    sparsity: float = None
     ar_params: list = None
-    loss_func: str = "huber"
-    n_epoch: int = 10
-    lr: float = None
+    log_level: str = None
+
     dls: DataLoaders = field(init=False)
     learn: TabularLearner = field(init=False)
     coeff: list = field(init=False)
+    df: pd.DataFrame = field(init=False)
 
     def __post_init__(self):
         if self.log_level is not None:
             utils.set_logger_level(log, self.log_level)
-        self.loss_func = get_loss_func(self.loss_func)
+        self.loss_func = fastai_mods.get_loss_func(self.loss_func)
+        df = None
 
     def tabularize(self, series):
         if self.est_noise is None:
@@ -128,36 +50,44 @@ class ARNet:
         log.debug("df columns: {}".format(list(df_all.columns)))
         log.debug("df shape: {}".format(df_all.shape))
         # log.debug("df head(3): {}".format(df_all.head(3)))
-        return df_all
+        self.df = df_all
+        return self
 
     def make_datasets(
         self,
-        df_all,
+        series=None,
         valid_p=None,
         train_bs=None,
         valid_bs=None,
-        procs=None,
+        normalize=False,
     ):
+        if series is None:
+            if self.df is None:
+                raise ValueError("must pass a series.")
+        else:
+            self.tabularize(series)
         valid_p = self.valid_p if valid_p is None else valid_p
         train_bs = self.train_bs if train_bs is None else train_bs
         valid_bs = self.valid_bs if valid_bs is None else valid_bs
 
-        if procs is None:
-            # preprocess?
-            # procs = [fastai.data.transforms.Normalize]
-            procs = []
+        procs = []
+        if normalize:
+            procs.append(Normalize)
 
-        # split
+        df_all = self.df
         splits = utils_data.split_by_p_valid(valid_p, len(df_all))
         cont_names = [col for col in list(df_all.columns) if "x_" == col[:2]]
         target_names = [col for col in list(df_all.columns) if "y_" == col[:2]]
         tp = TabularPandas(
-            df_all, procs=procs, cat_names=None, cont_names=cont_names, y_names=target_names, splits=splits
+            df_all,
+            procs=procs,
+            cat_names=None,
+            cont_names=cont_names,
+            y_names=target_names,
+            splits=splits,
         )
-        log.info("cont var num: {}, names: {}".format(len(tp.cont_names), tp.cont_names))
-        # log.debug(tp.iloc[0:5])
+        log.debug("cont var num: {}, names: {}".format(len(tp.cont_names), tp.cont_names))
 
-        # next: data loader, learner
         trn_dl = TabDataLoader(tp.train, bs=train_bs, shuffle=True, drop_last=True)
         val_dl = TabDataLoader(tp.valid, bs=valid_bs)
         self.dls = DataLoaders(trn_dl, val_dl)
@@ -173,18 +103,17 @@ class ARNet:
     ):
         sparsity = self.sparsity if sparsity is None else sparsity
         ar_params = self.ar_params if ar_params is None else ar_params
-        loss_func = self.loss_func if loss_func is None else get_loss_func(loss_func)
+        loss_func = self.loss_func if loss_func is None else fastai_mods.get_loss_func(loss_func)
+
+        metrics = ["MSE", "MAE"]
+        metrics = [fastai_mods.get_loss_func(m) for m in metrics]
+        if ar_params is not None:
+            metrics.append(fastai_mods.sTPE(ar_params, at_epoch_end=False))
+
         callbacks = []
         if sparsity is not None:
-            callbacks.append(SparsifyAR(sparsity, self.est_noise))
+            callbacks.append(fastai_mods.SparsifyAR(sparsity, self.est_noise))
             log.info("reg lam: {}".format(callbacks[0].lam))
-
-        metrics = [
-            fastai.metrics.mse,
-            fastai.metrics.mae,
-        ]
-        if ar_params is not None:
-            metrics.append(sTPE(ar_params, at_epoch_end=False))
 
         tm_config = {"use_bn": False, "bn_final": False, "bn_cont": False}
         self.learn = tabular_learner(
@@ -194,7 +123,7 @@ class ARNet:
             n_out=self.n_forecasts,  # None calls get_c(dls)
             train_bn=False,  # passed to Learner
             metrics=metrics,  # passed on to TabularLearner, to parent Learner
-            loss_func=self.loss_func,
+            loss_func=loss_func,
             cbs=callbacks,
         )
         log.debug("{}".format(self.learn.model))
@@ -203,16 +132,16 @@ class ARNet:
     def find_lr(self, plot=True):
         if self.learn is None:
             raise ValueError("create learner first.")
-        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=400, show_plot=plot)
+        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=1000, show_plot=plot)
         if plot:
             plt.show()
         log.debug("lr at minimum: {}; (steepest lr: {})".format(lr_at_min, lr_steep))
-        lr = lr_at_min / 10
+        lr = lr_at_min
         log.info("Optimal learning rate: {}".format(lr))
         self.lr = lr
         return self
 
-    def fit(self, n_epoch=None, lr=None, plot=True, cycles=2):
+    def fit(self, n_epoch=None, lr=None, cycles=3, plot=True):
         n_epoch = self.n_epoch if n_epoch is None else n_epoch
         lr = self.lr if lr is None else lr
         if lr is None:
@@ -229,7 +158,7 @@ class ARNet:
         return self
 
     def fit_with_defaults(self, series):
-        self.make_datasets(self.tabularize(series))
+        self.make_datasets(series)
         self.create_learner()
         self.fit(plot=False)
         return self
