@@ -33,6 +33,7 @@ class SparsifyAR(Callback):
     ):
         super().__init__(**kwargs)
         self.lam_max = 0.0
+        est_noise = 1.0 if est_noise is None else est_noise
         if est_sparsity is not None:
             assert 1 >= est_sparsity > 0
             self.lam_max = reg_strength * est_noise * ((1.0 + 1e-9) / (est_sparsity + 1e-9) - 1.0)

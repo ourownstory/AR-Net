@@ -134,6 +134,7 @@ class ARNet:
             c2=reg_c2,
         )
         log.info("reg lam (max): {}".format(self.regularizer.lam_max))
+        return self
 
     def create_learner(
         self,
