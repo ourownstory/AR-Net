@@ -4,12 +4,13 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import fastai
+import torch
 from fastai.data.core import DataLoaders
 from fastai.tabular.core import TabularPandas, TabDataLoader
 from fastai.tabular.learner import tabular_learner, TabularLearner
 from fastai.data.transforms import Normalize
 from fastai.learner import load_learner
+from fastai.distributed import ParallelTrainer
 
 from arnet import utils, utils_data, plotting
 from arnet.fastai_mods import SparsifyAR, huber, sTPE, get_loss_func
@@ -39,6 +40,7 @@ class ARNet:
     log_level: str = None
     callbacks: list = None
     metrics: list = None
+    use_gpu: bool = False
     dls: DataLoaders = field(init=False, default=None)
     learn: TabularLearner = field(init=False, default=None)
     coeff: list = field(init=False, default=None)
@@ -49,6 +51,15 @@ class ARNet:
         if self.log_level is not None:
             utils.set_logger_level(log, self.log_level)
         self.loss_func = get_loss_func(self.loss_func)
+        if self.use_gpu:
+            if torch.cuda.is_available():
+                self.device = torch.device("cuda")
+                # torch.cuda.set_device(0)
+            else:
+                log.error("CUDA is not available. defaulting to CPU")
+                self.device = torch.device("cpu")
+        else:
+            self.device = torch.device("cpu")
 
     def tabularize(self, series):
         if self.est_noise is None:
@@ -100,9 +111,9 @@ class ARNet:
         )
         log.debug("cont var num: {}, names: {}".format(len(tp.cont_names), tp.cont_names))
 
-        trn_dl = TabDataLoader(tp.train, bs=train_bs, shuffle=True, drop_last=True)
-        val_dl = TabDataLoader(tp.valid, bs=valid_bs)
-        self.dls = DataLoaders(trn_dl, val_dl)
+        trn_dl = TabDataLoader(tp.train, bs=train_bs, shuffle=True, drop_last=True, device=self.device)
+        val_dl = TabDataLoader(tp.valid, bs=valid_bs, device=self.device)
+        self.dls = DataLoaders(trn_dl, val_dl, device=self.device)
         log.debug("showing batch")
         log.debug("{}".format(self.dls.show_batch(show=False)))
         return self
@@ -189,6 +200,7 @@ class ARNet:
     def fit_one_cycle(self, n_epoch=None, lr=None, cycles=1, plot=True):
         n_epoch = self.n_epoch if n_epoch is None else n_epoch
         lr = self.lr if lr is None else lr
+
         if lr is None:
             self.find_lr(plot=plot)
             lr = self.lr
