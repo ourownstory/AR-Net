@@ -24,23 +24,29 @@ class SparsifyAR(Callback):
         self,
         est_sparsity,
         est_noise=1.0,
-        reg_strength=0.02,
+        reg_strength=0.01,
         start_pct=0.0,
         full_pct=0.5,
+        c1=2.0,
+        c2=2.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.lam_max = 0.0
         if est_sparsity is not None:
-            self.lam_max = reg_strength * est_noise * (1.0 / est_sparsity - 1.0)
+            assert 1 >= est_sparsity > 0
+            self.lam_max = reg_strength * est_noise * ((1.0 + 1e-9) / (est_sparsity + 1e-9) - 1.0)
         self.start_pct = start_pct
         self.full_pct = full_pct
+        # note: implementation in paper used c1 = 3.0, c2 = 3.0
+        self.c1 = c1
+        self.c2 = c2
         self.lam = None
 
     def after_loss(self):
         if not self.training:
             return
-        if self.lam_max == 0 or self.lam == 0:
+        if self.lam_max == 0.0 or self.lam == 0.0:
             return
         abs_weights = None
         for layer in self.learn.model.modules():
@@ -49,7 +55,7 @@ class SparsifyAR(Callback):
                 break
         if abs_weights is None:
             raise NotImplementedError("weight regualarization only implemented for model with Linear layer")
-        reg = torch.div(2.0, 1.0 + torch.exp(-3.0 * abs_weights.pow(1.0 / 3.0))) - 1.0
+        reg = torch.div(2.0, 1.0 + torch.exp(-self.c1 * abs_weights.pow(1.0 / self.c2))) - 1.0
 
         progress_iter = (1.0 + self.learn.iter) / (1.0 * self.learn.n_iter)
         progress = (progress_iter + self.learn.epoch) / (1.0 * self.learn.n_epoch)
