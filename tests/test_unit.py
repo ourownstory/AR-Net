@@ -17,7 +17,7 @@ from arnet.create_ar_data import generate_armaprocess_data
 from arnet.create_ar_data import save_to_file, load_from_file
 
 log = logging.getLogger("ARNet.test")
-log.setLevel("WARNING")
+log.setLevel("DEBUG")
 log.parent.setLevel("WARNING")
 
 DIR = pathlib.Path(__file__).parent.absolute()
@@ -50,7 +50,7 @@ class UnitTests(unittest.TestCase):
             df, data_config2 = load_from_file(data_path, data_name, load_config=True)
             log.debug("loaded from saved files:")
             log.debug("{}".format(data_config2))
-            log.debug("{}".format(df.head().to_string))
+            log.debug("{}".format(df.head()))
 
     def test_create_data_manual(self):
         # option 1: Randomly generated AR parameters
@@ -75,4 +75,4 @@ class UnitTests(unittest.TestCase):
             df, data_config2 = load_from_file(data_path, data_name, load_config=True)
             log.debug("loaded from saved files:")
             log.debug("{}".format(data_config2))
-            log.debug("{}".format(df.head().to_string))
+            log.debug("{}".format(df.head()))
