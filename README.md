@@ -9,9 +9,15 @@ and install arnet as python package with `pip install .`
 View the notebook [`example_notebooks/arnet.ipynb`](example_notebooks/arnet.ipynb) for an example of how to use the model.
 
 ## Versions
-### Current (1.1)
+### Current (1.2)
 The version 1.0 made the model easier to use with your own datasets and requires less hyperparameters 
 for a simpler training procedure. It is built on the fastai library.
+
+Changes (1.1 -> 1.2):
+* simplified UI with ARNet as object
+* GPU support
+* robustified training
+* added test cases
 
 Changes (1.0 -> 1.1):
 * port [beta fastai2](https://github.com/fastai/fastai2) to it's current [stable release](https://github.com/fastai/fastai) 
