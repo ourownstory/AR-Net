@@ -19,11 +19,11 @@ log = logging.getLogger("ARNet")
 
 @dataclass
 class ARNet:
+    ar_order: int
+    sparsity: float = None
     n_forecasts: int = 1
     n_epoch: int = 20
     lr: float = None
-    ar_order: int
-    sparsity: float = None
     est_noise: float = None
     start_reg_pct: float = 0.0
     full_reg_pct: float = 0.5

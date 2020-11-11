@@ -16,9 +16,9 @@ log = logging.getLogger("ARNet.test")
 log.setLevel("WARNING")
 log.parent.setLevel("WARNING")
 
-DIR = pathlib.Path(__file__).parent.parent.absolute()
+DIR = pathlib.Path(__file__).parent.absolute()
 data_path = os.path.join(DIR, "ar_data")
-results_path = os.path.join(data_path, "results_test")
+results_path = os.path.join(DIR, "results_test")
 EPOCHS = 2
 
 
@@ -31,9 +31,8 @@ class IntegrationTests(unittest.TestCase):
         m = arnet.ARNet(ar_order=3, n_epoch=3)
         m = m.tabularize(df)
         m = m.make_datasets()
-        m = m.create_learner(
-            sparsity=0.3,
-        )
+        m = m.create_regularizer(sparsity=0.3)
+        m = m.create_learner()
         m = m.find_lr(plot=False)
         m = m.fit(cycles=2, plot=False)
         log.info("coeff of random data: {}".format(m.coeff))
