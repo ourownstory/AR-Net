@@ -34,7 +34,7 @@ def compute_sTPE(est, real):
 def coeff_from_model(model, reversed_weights=True):
     for layer in model.modules():
         if isinstance(layer, torch.nn.Linear):
-            weights = [list(x[::-1] if reversed_weights else x) for x in layer.weight.detach().numpy()]
+            weights = [list(x[::-1] if reversed_weights else x) for x in layer.weight.detach().cpu().numpy()]
             return weights  # note: preliminary exit of loop is a feature.
 
 

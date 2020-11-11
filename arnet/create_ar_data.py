@@ -7,19 +7,9 @@ from statsmodels.tsa.arima_process import ArmaProcess
 
 def _get_config(noise_std=0.1, n_samples=10000, random_ar_params=True):
     # option 1: Randomly generated AR parameters
-    data_config_random = {
-        "noise_std": noise_std,
-        "ar_order": 3,
-        "ma_order": 0,
-        "params": None,  # for randomly generated AR params
-    }
-    data_config_random["samples"] = n_samples  # + int(data_config_random["ar_order"])
+    data_config_random = {"noise_std": noise_std, "ar_order": 3, "ma_order": 0, "params": None, "samples": n_samples}
     # option 2: Manually define AR parameters
-    data_config_manual = {
-        "noise_std": noise_std,
-        "params": ([0.2, 0.3, -0.5], []),
-        #     "params": ([0.2, 0, 0.3, 0, 0, 0, 0, 0, 0, -0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], []),
-    }
+    data_config_manual = {"noise_std": noise_std, "params": ([0.2, 0.3, -0.5], [])}
     data_config_manual["ar_order"] = int(sum(np.array(data_config_manual["params"][0]) != 0.0))
     data_config_manual["ma_order"] = int(sum(np.array(data_config_manual["params"][1]) != 0.0))
     data_config_manual["samples"] = n_samples  # + int(data_config_manual["ar_order"])
@@ -73,7 +63,7 @@ def generate_armaprocess_data(samples, ar_order, ma_order, noise_std, params=Non
     series = arma_process.generate_sample(samples, scale=noise_std)
     # make zero-mean:
     series = series - np.mean(series)
-    return series, arparams, maparams
+    return series, list(arparams), list(maparams)
 
 
 def save_to_file(save_path, series, data_config):
@@ -82,6 +72,8 @@ def save_to_file(save_path, series, data_config):
     file_data = "ar_{}_ma_{}_noise_{:.3f}_len_{}".format(
         data_config["ar_order"], data_config["ma_order"], data_config["noise_std"], data_config["samples"]
     )
+    # data_config["ar_params"] = list(data_config["ar_params"])
+    # data_config["ma_params"] = list(data_config["ma_params"])
     np.savetxt(os.path.join(save_path, file_data + ".csv"), series, delimiter=",")
     with open(os.path.join(save_path, "info_" + file_data + ".json"), "w") as f:
         json.dump(data_config, f)
