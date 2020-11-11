@@ -35,7 +35,7 @@ class IntegrationTests(unittest.TestCase):
         m.create_regularizer(sparsity=0.3)
         m.create_learner()
         m.find_lr(plot=False)
-        m.fit(cycles=2, plot=False)
+        m.fit_one_cycle(cycles=2, plot=False)
         log.info("coeff of random data: {}".format(m.coeff))
 
     def test_plot(self):
@@ -44,7 +44,7 @@ class IntegrationTests(unittest.TestCase):
 
         df = pd.DataFrame({"x": [random.gauss(0.0, 1.0) for i in range(1000)]})
         m = arnet.ARNet(ar_order=3, n_epoch=3)
-        m.fit_with_defaults(series=df)
+        m.fit(series=df)
         if self.plot:
             m.learn.recorder.plot_loss()
         m.plot_weights(save=True, savedir=results_path)
@@ -59,7 +59,7 @@ class IntegrationTests(unittest.TestCase):
 
         df = pd.DataFrame({"x": [random.gauss(0.0, 1.0) for i in range(1000)]})
         m = arnet.ARNet(ar_order=3, n_epoch=3)
-        m.fit_with_defaults(series=df)
+        m.fit(series=df)
 
         # Optional:save and create inference learner
         sparsity = 1.0 if m.sparsity is None else m.sparsity
@@ -88,7 +88,7 @@ class IntegrationTests(unittest.TestCase):
             sparsity=sparsity,
             ar_params=ar_params,
         )
-        m.fit_with_defaults(series=df)
+        m.fit(series=df)
 
         # Look at Coeff
         log.info("ar params: {}".format(arnet.nice_print_list(ar_params)))

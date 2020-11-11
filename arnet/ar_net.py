@@ -177,16 +177,16 @@ class ARNet:
     def find_lr(self, plot=True):
         if self.learn is None:
             raise ValueError("create learner first.")
-        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=500, show_plot=plot)
+        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=200, show_plot=plot)
         if plot:
             plt.show()
         log.debug("lr at minimum: {}; (steepest lr: {})".format(lr_at_min, lr_steep))
-        lr = lr_at_min
+        lr = lr_at_min / 10
         log.info("Optimal learning rate: {}".format(lr))
         self.lr = lr
         return self
 
-    def fit(self, n_epoch=None, lr=None, cycles=1, plot=True):
+    def fit_one_cycle(self, n_epoch=None, lr=None, cycles=1, plot=True):
         n_epoch = self.n_epoch if n_epoch is None else n_epoch
         lr = self.lr if lr is None else lr
         if lr is None:
@@ -203,10 +203,10 @@ class ARNet:
         self.coeff = utils.coeff_from_model(self.learn.model)
         return self
 
-    def fit_with_defaults(self, series):
+    def fit(self, series, plot=False):
         self.make_datasets(series)
         self.create_learner()
-        self.fit(plot=False)
+        self.fit_one_cycle(plot=plot)
         return self
 
     def plot_weights(self, **kwargs):
