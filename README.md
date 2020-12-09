@@ -1,5 +1,4 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![HitCount](http://hits.dwyl.com/ourownstory/AR-Net.svg)](http://hits.dwyl.com/ourownstory/AR-Net)
 
 # AR-Net
 A simple auto-regressive Neural Network for time-series ([link to paper](https://arxiv.org/abs/1911.12436)).
