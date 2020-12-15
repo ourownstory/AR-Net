@@ -186,11 +186,11 @@ class ARNet:
     def find_lr(self, plot=True):
         if self.learn is None:
             raise ValueError("create learner first.")
-        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=200, show_plot=plot)
+        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=10, num_it=300, show_plot=plot)
         if plot:
             plt.show()
         log.debug("lr at minimum: {}; (steepest lr: {})".format(lr_at_min, lr_steep))
-        lr = lr_at_min / 10
+        lr = lr_at_min
         log.info("Optimal learning rate: {}".format(lr))
         self.lr = lr
         return self
