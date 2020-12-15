@@ -65,9 +65,7 @@ class ARNet:
         if self.est_noise is None:
             self.est_noise = utils_data.estimate_noise(series)
             log.info("estimated noise of series: {}".format(self.est_noise))
-
         df_all = utils_data.tabularize_univariate(series, self.ar_order, self.n_forecasts)
-
         log.debug("tabularized df")
         log.debug("df columns: {}".format(list(df_all.columns)))
         log.debug("df shape: {}".format(df_all.shape))
@@ -188,11 +186,11 @@ class ARNet:
     def find_lr(self, plot=True):
         if self.learn is None:
             raise ValueError("create learner first.")
-        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=1, num_it=200, show_plot=plot)
+        lr_at_min, lr_steep = self.learn.lr_find(start_lr=1e-6, end_lr=10, num_it=300, show_plot=plot)
         if plot:
             plt.show()
         log.debug("lr at minimum: {}; (steepest lr: {})".format(lr_at_min, lr_steep))
-        lr = lr_at_min / 10
+        lr = lr_at_min
         log.info("Optimal learning rate: {}".format(lr))
         self.lr = lr
         return self
@@ -208,7 +206,7 @@ class ARNet:
             self.learn.fit_one_cycle(n_epoch=n_epoch, lr_max=lr, div=25.0, div_final=10000.0, pct_start=0.25)
             lr = lr / 10
             if plot:
-                self.learn.recorder.plot_loss()
+                self.learn.recorder.plot_loss(skip_start=20)
         if plot:
             plt.show()
         # record Coeff

@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
+import logging
 
 from arnet.create_ar_data import load_from_file
+
+log = logging.getLogger("ARNet")
 
 
 def estimate_noise(series):
