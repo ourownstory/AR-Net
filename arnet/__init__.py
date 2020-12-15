@@ -9,12 +9,13 @@ f_handler = logging.FileHandler("logs.log", "w+")
 # f_handler.setLevel("INFO")
 # Create formatters and add it to handlers
 c_format = logging.Formatter("%(levelname)s: %(name)s - %(funcName)s: %(message)s")
-f_format = logging.Formatter("%(asctime)s; %(levelname)s; %(name)s; %(funcName)s; %(message)s")
 c_handler.setFormatter(c_format)
-f_handler.setFormatter(f_format)
-# Add handlers to the logger
 log.addHandler(c_handler)
-log.addHandler(f_handler)
+
+# uncomment for a log file
+# f_format = logging.Formatter("%(asctime)s; %(levelname)s; %(name)s; %(funcName)s; %(message)s")
+# f_handler.setFormatter(f_format)
+# log.addHandler(f_handler)
 
 # lazy imports ala fastai2 style (for nice print functionality)
 from fastai.basics import *
