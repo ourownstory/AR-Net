@@ -20,6 +20,7 @@ Changes (1.1 -> 1.2):
 * GPU support
 * robustified training
 * added test cases
+* updated example notebooks
 
 Changes (1.0 -> 1.1):
 * port [beta fastai2](https://github.com/fastai/fastai2) to it's current [stable release](https://github.com/fastai/fastai) 
